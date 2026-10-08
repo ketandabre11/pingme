@@ -36,6 +36,7 @@ const ChatWindow = () => {
     setMessages,
     addMessage,
     updateChatLatestMessage,
+    incrementUnreadCount,
     socket,
     setShowGroupSettings,
     setCall,
@@ -203,7 +204,11 @@ const ChatWindow = () => {
         !selectedChatRef.current ||
         selectedChatRef.current._id !== newMessageRecieved?.chat?._id
       ) {
-        // Notification logic if chat isn't currently open
+        // Increment unread badge for chats not currently open
+        const chatId = newMessageRecieved?.chat?._id || newMessageRecieved?.chat;
+        if (chatId) {
+          incrementUnreadCount(chatId);
+        }
       } else {
         // Decrypt received message
         const decryptedMsg = decryptReply(
@@ -306,7 +311,7 @@ const ChatWindow = () => {
       socket.off("chat marked seen", handleChatMarkedSeen);
       socket.off("message updated", handleMessageUpdated);
     };
-  }, [socket, user?._id, addMessage, setMessages, updateChatLatestMessage]);
+  }, [socket, user?._id, addMessage, setMessages, updateChatLatestMessage, incrementUnreadCount]);
 
   const sendMessage = async (e) => {
     if (e.key === "Enter" && newMessage.trim()) {
@@ -477,29 +482,36 @@ const ChatWindow = () => {
       return;
     }
 
-    const bubble = event.currentTarget.closest(".message-bubble");
+    const button = event.currentTarget;
     const chatArea = messagesContainerRef.current?.getBoundingClientRect();
-    if (!bubble || !chatArea) return;
+    if (!button || !chatArea) return;
 
-    const bubbleRect = bubble.getBoundingClientRect();
+    const btnRect = button.getBoundingClientRect();
     const menuWidth = 150;
-    const menuHeight = 390;
-    const edge = 8;
-    const left = Math.min(
-      Math.max(chatArea.left + edge, bubbleRect.right - menuWidth),
-      chatArea.right - menuWidth - edge,
-    );
-    const belowTop = bubbleRect.bottom + 4;
-    const aboveTop = bubbleRect.top - menuHeight - 4;
-    const top =
-      belowTop + menuHeight <= chatArea.bottom - edge
-        ? belowTop
-        : Math.max(chatArea.top + edge, aboveTop);
+    const menuHeight = 300; // 8 items × ~37px each
+    const gap = 4;
 
-    setMessageMenuPosition({
-      left: Math.max(chatArea.left + edge, left),
-      top,
-    });
+    // Horizontal: align menu's left edge with the button's left edge
+    let left = btnRect.left;
+    // If menu overflows right, shift left
+    if (left + menuWidth > chatArea.right - gap) {
+      left = btnRect.right - menuWidth;
+    }
+    // Clamp within chat area
+    left = Math.max(chatArea.left + gap, Math.min(left, chatArea.right - menuWidth - gap));
+
+    // Vertical: prefer directly below the button, fall back to above
+    let top;
+    if (btnRect.bottom + gap + menuHeight <= chatArea.bottom - gap) {
+      top = btnRect.bottom + gap;
+    } else if (btnRect.top - gap - menuHeight >= chatArea.top + gap) {
+      top = btnRect.top - gap - menuHeight;
+    } else {
+      // Not enough space above or below — align to bottom of chat area
+      top = chatArea.bottom - menuHeight - gap;
+    }
+
+    setMessageMenuPosition({ left, top });
     setShowMsgOptions(messageId);
   };
 

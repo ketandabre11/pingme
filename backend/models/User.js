@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema(
     },
     about: {
       type: String,
-      default: "Hey there! I am using PingMe.",
+      default: "Hey there! I am on PingMe.",
     },
     lastSeen: {
       type: Date,

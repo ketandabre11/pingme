@@ -29,7 +29,7 @@ const Settings = () => {
   const [name, setName] = useState(user.name || "");
   const [email, setEmail] = useState(user.email || "");
   const [about, setAbout] = useState(
-    user.about || "Hey there! I am using PingMe.",
+    user.about || "Hey there! I am on PingMe.",
   );
   const [avatarPreview, setAvatarPreview] = useState(user.avatar);
   const fileInputRef = useRef(null);
@@ -503,7 +503,7 @@ const Settings = () => {
                       className="input-field"
                       value={about}
                       onChange={(e) => setAbout(e.target.value)}
-                      placeholder="Hey there! I am using PingMe."
+                      placeholder="Hey there! I am on PingMe."
                       style={{ paddingRight: "2.5rem", fontSize: "1rem" }}
                     />
                     <Edit2
